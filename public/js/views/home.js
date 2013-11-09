@@ -9,9 +9,12 @@ window.HomeView = Backbone.View.extend({
 			editor.getSession().setMode("ace/mode/c_cpp");
 
 			//var height = $(window).height();
-			var height = 500;
+			var height = 300;
 
 			$('#editor').height( height );
+
+			var cScript = new CScript();
+			document.body.appendChild( cScript );
 	    }, 0);
     },
 
