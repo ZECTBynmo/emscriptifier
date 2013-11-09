@@ -12,7 +12,7 @@ window.HomeView = Backbone.View.extend({
 			document.editor.getSession().setMode("ace/mode/c_cpp");
 
 			//var height = $(window).height();
-			var height = 300;
+			var height = 250;
 
 			$('#editor').height( height );
 	    }, 0);
