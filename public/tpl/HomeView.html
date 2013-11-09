@@ -6,10 +6,26 @@
 #include &#60;emscripten.h&#62;
 int main() {
 	EM_ASM(
-		alert('hello world!');
-		throw 'all done';
+		alert('hello from C++!');
 	);
 	return 0;
 }</pre>
 
-<c-script></c-script>
+<script>
+	function onDownload() {
+		console.log( "Download" );
+	};
+
+	function onInject() {
+		console.log( "Inject" );
+		var cScript = new CScript();
+		document.body.appendChild( cScript );
+
+		cScript.setCode( document.editor.getValue() );
+	};
+</script>
+
+<div class="hero-unit">
+	<a href="#" onclick="onDownload()" href="javascript:void(0);" class="btn"><i class="icon-download"></i> <strong>Compile and Download</strong></a>
+	<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn"><i class="icon-edit"></i> <strong>Inject into page</strong></a>
+</div>
