@@ -16,11 +16,7 @@ exports.compile = function( req, res ) {
 		c: req.body.c
 	};
 
-	console.log( url );
-	console.log( req.body.c );
-
 	needle.post( url, sourceCode, function(err, response, body) {
-		require("fs").writeFileSync( __dirname + "/testoutput.js", body.js );
 		res.json( 200, body.js );
 	});
 
