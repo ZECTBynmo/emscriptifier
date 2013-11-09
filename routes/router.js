@@ -1,8 +1,27 @@
 // Set us up to use JSON5
 require('json5/lib/require');
 
-// leto-marker-router-requires
-var config = require("../config");
+var config = require("../config"),
+	needle = require("needle");
 
-// leto-marker-routes
 
+// POST /compile
+exports.compile = function( req, res ) {    
+    
+    // We don't want the browser to cache the results 
+    res.header( 'Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0' );
+
+    var url = "http://54.243.208.160:3000/compile";
+    var sourceCode = {
+		c: req.body.c
+	};
+
+	console.log( url );
+	console.log( req.body.c );
+
+	needle.post( url, sourceCode, function(err, response, body) {
+		require("fs").writeFileSync( __dirname + "/testoutput.js", body.js );
+		res.json( 200, body.js );
+	});
+
+}
