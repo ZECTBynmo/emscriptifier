@@ -3,18 +3,18 @@ window.HomeView = Backbone.View.extend({
     initialize:function () {
         this.render();
 
+        var _this = this;
         setTimeout(function() {
-	        var editor = ace.edit("editor");
-			editor.setTheme("ace/theme/monokai");
-			editor.getSession().setMode("ace/mode/c_cpp");
+        	console.log( "SDFSDFSD ");
+
+	        document.editor = ace.edit("editor");
+			document.editor.setTheme("ace/theme/monokai");
+			document.editor.getSession().setMode("ace/mode/c_cpp");
 
 			//var height = $(window).height();
 			var height = 300;
 
 			$('#editor').height( height );
-
-			var cScript = new CScript();
-			document.body.appendChild( cScript );
 	    }, 0);
     },
 
