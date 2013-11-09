@@ -11,7 +11,10 @@
     "url": "git@github.com:nko4/zect.git"
   },
   "dependencies": {
-    "nko": "*"
+    "nko": "*",
+    "express": "~3.4.4",
+    "needle": "~0.6.3",
+    "json5": "~0.2.0"
   },
   "engines": {
     "node": "0.10.x"
