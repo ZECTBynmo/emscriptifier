@@ -1,29 +1,36 @@
 <div class="page-header">
-  	<h1>Use C++ Directly from HTML</h1> 
-  	<h1><small>Leverage <a href="https://github.com/kripken/emscripten">Emscripten</a> like a boss</small></h1> 
+  	<h1>Use C++ Directly from your web pages</h1> 
+  	<h1><small>Leveraging <a href="https://github.com/kripken/emscripten">Emscripten</a></small></h1> 
 </div>
 
 <div class="row-fluid">
 
-	<div class="span6">
+	<div class="span8 hero-unit">
 		<div class="row-fluid">
-			<div class="span6">
+			<div class="span7">
 				<h2>Demo!</h2>
 				<p>Put some C++ here</p>
 			</div>
-			<div class="span5">
+			<div class="span4">
 				<br>
-				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-default btn-large"><i class="icon-edit"></i> <strong>Inject into page</strong></a>
+				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-inverse btn-large"><strong>Inject into page as JavaScript</strong></a>
 			</div>
 		</div>
 		
-		<pre id="editor">#include &#60;emscripten.h&#62;
+		<pre id="editor">
+#include &#60;emscripten.h&#62;
 int main() {
 	EM_ASM(
 		alert('hello from C++!');
 	);
 	return 0;
-}</pre>
+}
+		</pre>
+	</div>
+
+	<div class="span4">
+		<h2>Downloads</h2><br>
+		<a href="emscriptifier/emscriptifier.js" class="btn btn-primary btn-large"><strong>emscriptifier.js</strong></a>
 	</div>
 
 	<script>
@@ -40,21 +47,28 @@ int main() {
 		};
 	</script>
 
-	<div class="span12">
-		<br>
-		<br>
-		<hr>
-		<br>
+	<div class="row-fluid">
+		<div class="span12">
+			<br>
+			<hr>
+			<br>
+		</div>
 	</div>
 </div>
+
+<script>console.log("Loading html");</script>
 
 <div class="row-fluid">
 	<div class="span5">
 		<h1 class="centered">C --> JS</h1>
 		<p>
-			JavaScript is great, but not for everything. When you're interfacing with webgl, doing audio processing, etc. it can be more natural, convenient or performant when written in C/C++.
+			JavaScript is great, but not for everything. When you're interfacing with webgl, doing audio processing, etc. it can sometimes be more natural, convenient or performant when written in C/C++.
 			<br><br>
-			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bytecode, and then builds running JavaScript out of it. This application sets up an interface to load C/C++ code directly from html. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. This means you can do things like ---->
+			
+			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bytecode, and then builds running, optimized JavaScript out of it. This application sets up an interface to load C/C++ code directly from html or JavaScript. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. 
+			<br>
+
+			New HTML5 features allow us to create custom tags (check <a href="http://www.html5rocks.com/en/tutorials/webcomponents/customelements/">this</a> out). A custom script called <a href="emscriptifier/emscriptifier.js">emscriptifier.js</a> allows you to create html elements using these new features.
 		</p>
 	</div>
 
@@ -62,7 +76,7 @@ int main() {
 		<pre>
 &#60;head&#62;
 &#60;script src="lib/emscriptifier/emscriptifier.js"&#62;&#60;/script&#62;
-&#60;c_script&#62;
+&#60;c-script&#62;
 	#include &#60;emscripten.h&#62;
 	int main() {
 		EM_ASM(
@@ -70,10 +84,35 @@ int main() {
 		);
 		return 0;
 	}
-&#60;/c_script&#62;
+&#60;/c-script&#62;
 &#60;/head&#62;
 &#60;body&#62;
 &#60;/body&#62;</pre>
+	</div>
+
+</div>
+<br>
+<br>
+<br>
+<div class="row-fluid">
+	<div class="span5">
+		<h4 class="centered">Note:</h4>
+		<p>
+			Unfortunately, the new features don't work in all browsers/situations, so you can also add c-script tags via JavaScript, and be a little more sure of good results (which is how the demo on this page works)
+		</p>
+	</div>
+
+	<div class="span6">
+		<pre>
+&#60;script src="lib/emscriptifier/emscriptifier.js"&#62;&#60;/script&#62;
+&#60;script&#62;
+	var cScript = new CScript();
+	document.body.appendChild( cScript );
+
+	// Set the C code of this element as a string, causing 
+	// it to be converted to JS and injected into the page
+	cScript.setCode( document.editor.getValue() );
+&#60;/script&#62;
 	</div>
 
 </div>
