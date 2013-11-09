@@ -6,9 +6,12 @@ window.HomeView = Backbone.View.extend({
         setTimeout(function() {
 	        var editor = ace.edit("editor");
 			editor.setTheme("ace/theme/monokai");
-			editor.getSession().setMode("ace/mode/javascript");
+			editor.getSession().setMode("ace/mode/c_cpp");
 
-			$('#editor').height($(window).height());
+			//var height = $(window).height();
+			var height = 500;
+
+			$('#editor').height( height );
 	    }, 0);
     },
 
