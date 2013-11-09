@@ -1,8 +1,46 @@
-<h1>Real time demo!</h1>
 
-<p>Put some C++ code here, and press the button below. The code will be converted to javascript using Emscripten, and injected into the page.</p>
+<div class="row">
 
-<pre id="editor">
+	<div class="span5">
+		<h1 class="centered">C --> JS</h1>
+		<p>
+			JavaScript is great, but not for everything. When you're interfacing with webgl, doing audio processing, etc. it can be more natural, convenient or performant when written in C/C++.
+			<br><br>
+			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bytecode, and then builds running JavaScript out of it. This application sets up an interface to load C/C++ code directly from html. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. This means you can do things like ---->
+		</p>
+	</div>
+	
+	<div class="span6">
+		<pre>
+&#60;head&#62;
+&#60;script src="lib/emscriptifier/emscriptifier.js"&#62;&#60;/script&#62;
+&#60;c_script&#62;
+	#include &#60;emscripten.h&#62;
+	int main() {
+		EM_ASM(
+			alert('hello from C++!');
+		);
+		return 0;
+	}
+&#60;/c_script&#62;
+&#60;/head&#62;
+&#60;body&#62;
+&#60;/body&#62;</pre>
+	</div>
+
+	<div class="span12">
+		<br>
+		<br>
+		<hr>
+		<br>
+
+		<h1>Live Demo!</h1>
+
+		<p>Put some C++ here</p>
+	</div>
+
+
+	<pre id="editor" class="span6">
 #include &#60;emscripten.h&#62;
 int main() {
 	EM_ASM(
@@ -11,21 +49,23 @@ int main() {
 	return 0;
 }</pre>
 
-<script>
-	function onDownload() {
-		console.log( "Download" );
-	};
+	<script>
+		function onDownload() {
+			console.log( "Download" );
+		};
 
-	function onInject() {
-		console.log( "Inject" );
-		var cScript = new CScript();
-		document.body.appendChild( cScript );
+		function onInject() {
+			console.log( "Inject" );
+			var cScript = new CScript();
+			document.body.appendChild( cScript );
 
-		cScript.setCode( document.editor.getValue() );
-	};
-</script>
+			cScript.setCode( document.editor.getValue() );
+		};
+	</script>
 
-<div class="hero-unit">
-	<a href="#" onclick="onDownload()" href="javascript:void(0);" class="btn"><i class="icon-download"></i> <strong>Compile and Download</strong></a>
-	<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn"><i class="icon-edit"></i> <strong>Inject into page</strong></a>
+	<div class="hero-unit btn-group span4">
+		<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-default btn-large"><i class="icon-edit"></i> <strong>Inject into page</strong></a>
+		<br><br>
+		<!-- <a href="#" onclick="onDownload()" href="javascript:void(0);" class="btn btn-default btn-lg"><i class="icon-download"></i> <strong>Compile and Download</strong></a> -->
+	</div>
 </div>
