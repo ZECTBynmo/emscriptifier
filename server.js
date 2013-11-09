@@ -9,7 +9,6 @@ var express = require('express'),
     config = require("./config"),
     path = require('path'),
     http = require('http'),
-    io = require('socket.io'),
     router = require(__dirname + '/routes/router');
 
 var app = express();
