@@ -1,32 +1,33 @@
-var codeString = "#include <emscripten.h> \
-\nint main() {\
-\n  EM_ASM(\
-\n    alert('hello world!');\
-\n    throw 'all done';\
-\n  );\
-\n  return 0;\
-\n}";
-
-
-
 var CScriptPrototype = Object.create(HTMLElement.prototype);
 CScriptPrototype.createdCallback = function() {
-  	this.textContent = "I'm a c-script!";
-  	
-  	var url = document.location.origin + "/compile";
+    this.cCode = this.textContent;
+    if( this.cCode === undefined || this.cCode == "" )
+        return;
 
-  	var httpData = {
-  		c: codeString
-  	};
-
-  	postJSON( url, httpData, function(data) {
-  	    // Evaluate the compiled script
-        (new Function(data))()
-  	});
+    this.updateContents();
 };
 
-CScriptPrototype.foo = function() {
-  	console.log('foo() called');
+CScriptPrototype.setCode = function( code ) {
+  	this.cCode = code;
+
+    this.updateContents();
+};
+
+CScriptPrototype.updateContents = function( code ) {
+    var url = document.location.origin + "/compile";
+
+    var httpData = {
+        c: this.cCode
+    };
+
+    postJSON( url, httpData, function(data) {
+        // Evaluate the compiled script
+        try { 
+            (new Function(data))()
+        } catch( err ) {
+            console.log( "Error: " + err );
+        }
+    });
 };
 
 var CScript = document.register('c-script', {
