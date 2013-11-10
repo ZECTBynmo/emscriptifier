@@ -17,15 +17,256 @@
 			</div>
 		</div>
 		
-		<pre id="editor">
+		<textarea id="editor">
 #include &#60;emscripten.h&#62;
-int main() {
-	EM_ASM(
-		alert('hello from C++!');
-	);
-	return 0;
+#include &#60;SDL/SDL.h&#62;
+#include &#60;SDL/SDL_audio.h&#62;
+#include &#60;queue&#62;
+#include &#60;cmath&#62;
+#include &#60;stdio.h&#62;
+#include &#60;assert.h&#62;
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
+
+#ifdef EMSCRIPTEN
+#include "emscripten/emscripten.h"
+#endif
+
+#ifdef main
+#undef main
+#endif
+
+const int tone_duration = 1000;
+
+struct BeepObject {
+  double toneFrequency;
+  int samplesLeft;
+};
+
+class Beeper {
+private:
+  double phase;
+  int frequency;
+  int numChannels;
+  int mutedChannel;
+public:
+  Beeper(int frequency, int numChannels, int sdlAudioFormat);
+  ~Beeper();
+  void beep(double toneFrequency, int durationMSecs);
+  template&#60;typename T&#62;
+  void generateSamples(T *stream, int length);
+  void wait();
+
+  std::queue&#60;BeepObject&#62; beeps;
+  int sdlAudioFormat;
+};
+
+void audio_callback(void*, Uint8*, int);
+
+Beeper::Beeper(int frequency_, int numChannels_, int sdlAudioFormat_) {
+  phase = 0.0;
+  mutedChannel = 1;
+
+  SDL_AudioSpec desiredSpec;
+
+  desiredSpec.freq = frequency_;
+  desiredSpec.format = sdlAudioFormat_;
+  desiredSpec.channels = numChannels_;
+  desiredSpec.samples = 1024; // This is samples per channel.
+  desiredSpec.callback = audio_callback;
+  desiredSpec.userdata = this;
+
+  SDL_AudioSpec obtainedSpec;
+
+  // you might want to look for errors here
+  SDL_OpenAudio(&desiredSpec, &obtainedSpec);
+
+  // In this test, we require *exactly* the identical SDL result that we provide, since we test
+  // all various configurations individually.
+  if (obtainedSpec.freq != desiredSpec.freq || obtainedSpec.format != desiredSpec.format
+    || obtainedSpec.channels != desiredSpec.channels || obtainedSpec.samples != desiredSpec.samples) {
+    SDL_CloseAudio();
+    throw std::runtime_error("Failed to initialize desired SDL_OpenAudio!");
+  }
+
+  frequency = obtainedSpec.freq;
+  numChannels = obtainedSpec.channels;
+  sdlAudioFormat = obtainedSpec.format;
+
+  // Immediately start producing audio.
+  SDL_PauseAudio(0);
 }
-		</pre>
+
+Beeper::~Beeper() {
+  SDL_CloseAudio();
+}
+
+template&#60;typename T&#62;
+void Beeper::generateSamples(T *stream, int length) {
+  const int AMPLITUDE = (sizeof(T) == 2) ? 28000 : 120;
+  const int offset = (sdlAudioFormat == AUDIO_U8) ? 120 : 0;
+
+  int i = 0;
+  length /= numChannels;
+  while (i &#60; length) {
+    if (beeps.empty()) {
+      memset(stream + numChannels*i, 0, sizeof(T)*numChannels*(length-i));
+      return;
+    }
+    BeepObject& bo = beeps.front();
+
+    // In Stereo tests, mute one of the channels to be able to distinguish that Stereo output works.
+    if (bo.samplesLeft > tone_duration * frequency / 2 / 1000) {
+      mutedChannel = 1;
+    } else {
+      mutedChannel = 0;
+    }
+
+    int samplesToDo = std::min(i + bo.samplesLeft, length);
+    bo.samplesLeft -= samplesToDo - i;
+
+    while (i &#60; samplesToDo) {
+      for(int j = 0; j &#60; numChannels; ++j) {
+        stream[numChannels*i+j] = (T)(offset + (int)(AMPLITUDE * std::sin(phase * 2 * M_PI / frequency)));
+        if (numChannels > 1 && j == mutedChannel) {
+          stream[numChannels*i+j] = 0;
+        }
+      }
+      phase += bo.toneFrequency;
+      i++;
+    }
+
+    if (bo.samplesLeft == 0) {
+      beeps.pop();
+    }
+  }
+}
+
+void Beeper::beep(double toneFrequency, int durationMSecs) {
+  BeepObject bo;
+  bo.toneFrequency = toneFrequency;
+  bo.samplesLeft = durationMSecs * frequency / 1000;
+
+  SDL_LockAudio();
+  beeps.push(bo);
+  SDL_UnlockAudio();
+}
+
+Beeper *beep = 0;
+
+// Test all kinds of various possible formats. Not all are supported, but running this
+// test will report you which work.
+const int freqs[] = { 8000, 11025, 16000, 22050, 32000, 44100, 48000, 96000 };
+const int channels[] = { 1, 2 };
+const int sdlAudioFormats[] = { AUDIO_U8, AUDIO_S16LSB /*, AUDIO_S8, AUDIO_U16LSB, AUDIO_U16MSB, AUDIO_S16MSB */ };
+
+const char *SdlAudioFormatToString(int sdlAudioType) {
+  switch(sdlAudioType) {
+  case AUDIO_U8: return "AUDIO_U8";
+  case AUDIO_S8: return "AUDIO_S8";
+  case AUDIO_U16LSB: return "AUDIO_U16LSB";
+  case AUDIO_U16MSB: return "AUDIO_U16MSB";
+  case AUDIO_S16LSB: return "AUDIO_S16LSB";
+  case AUDIO_S16MSB: return "AUDIO_S16MSB";
+  default: return "(unknown)";
+  }
+}
+
+#define NUM_ELEMS(x) (sizeof(x)/sizeof((x)[0]))
+
+// Indices to the currently running test.
+int f = -1;
+int c = 0;
+int s = 0;
+
+void nextTest(void *unused = 0) {
+  ++f;
+  if (f >= NUM_ELEMS(freqs)) {
+    f = 0;
+    ++c;
+    if (c >= NUM_ELEMS(channels)) {
+      c = 0;
+      ++s;
+      if (s >= NUM_ELEMS(sdlAudioFormats)) {
+        printf("All tests done. Quit.\n");
+#ifdef EMSCRIPTEN
+        emscripten_cancel_main_loop();
+#ifdef REPORT_RESULT
+        int result = 1;
+        REPORT_RESULT();
+#endif
+#endif
+        return;
+      }
+    }
+  }
+
+  double Hz = 440;
+  try {
+    beep = new Beeper(freqs[f], channels[c], sdlAudioFormats[s]);
+  } catch(...) {
+    printf("FAILED to play beep for %d msecs at %d Hz tone with audio format %s, %d channels, and %d samples/sec.\n",
+        tone_duration, (int)Hz, SdlAudioFormatToString(sdlAudioFormats[s]), channels[c], freqs[f]);
+    nextTest();
+    return;
+  }
+
+  printf("Playing back a beep for %d msecs at %d Hz tone with audio format %s, %d channels, and %d samples/sec.\n",
+      tone_duration, (int)Hz, SdlAudioFormatToString(sdlAudioFormats[s]), channels[c], freqs[f]);
+  beep->beep(Hz, tone_duration);
+}
+
+void update() {
+  SDL_LockAudio();
+  int size = beep->beeps.size();
+  SDL_UnlockAudio();
+  if (size == 0 && beep) {
+    delete beep;
+    beep = 0;
+#ifdef EMSCRIPTEN
+    emscripten_async_call(nextTest, 0, 1500);
+#else
+    SDL_Delay(1500);
+    nextTest();
+#endif
+  }
+}
+
+void audio_callback(void *_beeper, Uint8 *_stream, int _length) {
+  Beeper* beeper = (Beeper*) _beeper;
+
+  if (beeper->sdlAudioFormat == AUDIO_U8) {
+    Uint8 *stream = (Uint8*) _stream;
+    beeper->generateSamples(stream, _length);
+  } else if (beeper->sdlAudioFormat == AUDIO_S16LSB) {
+    Sint16 *stream = (Sint16*) _stream;
+    int length = _length / 2;
+    beeper->generateSamples(stream, length);
+  } else {
+    assert(false && "Audio sample generation not implemented for current format!\n");
+  }
+}
+
+int main(int argc, char** argv) {
+  SDL_Init(SDL_INIT_AUDIO);
+
+  nextTest();
+   
+#ifdef EMSCRIPTEN
+  emscripten_set_main_loop(update, 60, 0);
+#else
+  while(beep) {
+    SDL_Delay(20);
+    update();
+  }
+#endif
+
+  return 0;
+}
+		</textarea><br>
+		Note: The server has a caching system, so the first time you submit some new source, it takes a few seconds longer. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, and try again. If it still doesn't load, there may have been some compilation errors.
 	</div>
 
 	<div class="span4">
@@ -34,7 +275,7 @@ int main() {
 		</iframe><br>
 
 		<br><h2>Downloads</h2><br>
-		<a href="emscriptifier/emscriptifier.js" class="btn btn-primary btn-large"><strong>emscriptifier.js</strong></a>
+		<a href="javascript:void(0);" onClick="window.location.href='/lib/lib.rar'" class="btn btn-primary btn-large"><strong>emscriptifier</strong></a>
 	</div>
 
 	<script>
@@ -47,7 +288,11 @@ int main() {
 			var cScript = new CScript();
 			document.body.appendChild( cScript );
 
-			cScript.setCode( document.editor.getValue() );
+			var options = {
+				extension: ".js"
+			};
+
+			cScript.setCode( document.editor.getValue(), options );
 		};
 	</script>
 
@@ -63,13 +308,14 @@ int main() {
 <script>console.log("Loading html");</script>
 
 <div class="row-fluid">
-	<div class="span5">
-		<h1 class="centered">C --> JS</h1>
+	<div class="span6">
+		<h1 class="centered">Why would you want to do that?</h1>
 		<p>
 			JavaScript is great, but not for everything. When you're interfacing with webgl, doing audio processing, etc. it can sometimes be more natural, convenient or performant when written in C/C++.
 			<br><br>
 			
-			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bytecode, and then builds running, optimized JavaScript out of it. This application sets up an interface to load C/C++ code directly from html or JavaScript. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. 
+			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bitcode, and then builds running, optimized JavaScript out of it. This application sets up an interface to load C/C++ code directly from html or JavaScript. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. 
+			<br>
 			<br>
 
 			New HTML5 features allow us to create custom tags (check <a href="http://www.html5rocks.com/en/tutorials/webcomponents/customelements/">this</a> out). A custom script called <a href="emscriptifier/emscriptifier.js">emscriptifier.js</a> allows you to create html elements using these new features.
@@ -79,6 +325,8 @@ int main() {
 	<div class="span6">
 		<pre>
 &#60;head&#62;
+&#60;script src="lib/polymer/polymer.js"&#62;&#60;/script&#62;
+&#60;script src="lib/CustomElements/custom-elements.js"&#62;&#60;/script&#62;
 &#60;script src="lib/emscriptifier/emscriptifier.js"&#62;&#60;/script&#62;
 &#60;c-script&#62;
 	#include &#60;emscripten.h&#62;
@@ -99,15 +347,17 @@ int main() {
 <br>
 <br>
 <div class="row-fluid">
-	<div class="span5">
+	<div class="span6">
 		<h4 class="centered">Note:</h4>
 		<p>
-			Unfortunately, the new features don't work in all browsers/situations, so you can also add c-script tags via JavaScript, and be a little more sure of good results (which is how the demo on this page works)
+			Unfortunately, custom HTML tags don't work fully in all browsers/situations, so you can also add c-script tags via JavaScript, and be a little more sure of good results (which is how the demo on this page works)
 		</p>
 	</div>
 
 	<div class="span6">
 		<pre>
+&#60;script src="lib/polymer/polymer.js"&#62;&#60;/script&#62;
+&#60;script src="lib/CustomElements/custom-elements.js"&#62;&#60;/script&#62;
 &#60;script src="lib/emscriptifier/emscriptifier.js"&#62;&#60;/script&#62;
 &#60;script&#62;
 	var cScript = new CScript();
