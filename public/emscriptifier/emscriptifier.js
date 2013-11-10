@@ -4,28 +4,55 @@ CScriptPrototype.createdCallback = function() {
     if( this.cCode === undefined || this.cCode == "" )
         return;
 
+    this.options = {
+        extension: ".js",
+        guid: getHash(".js" + this.cCode)
+    };
+
     this.updateContents();
 };
 
-CScriptPrototype.setCode = function( code ) {
+CScriptPrototype.setCode = function( code, options ) {
   	this.cCode = code;
 
+    var extension = options.extension || ".js",
+        guid = options.guid || getHash( extension + this.cCode );
+
+    this.options = {
+        guid: guid,
+        extension: extension
+    };
+
     this.updateContents();
 };
 
-CScriptPrototype.updateContents = function( code ) {
+CScriptPrototype.updateContents = function() {
+    var _this = this;
+
     var url = document.location.origin + "/compile";
 
     var httpData = {
-        c: this.cCode
+        guid: this.options.guid,
+        c: this.cCode,
+        extension: this.options.extension
     };
 
-    postJSON( url, httpData, function(data) {
-        // Evaluate the compiled script
-        try { 
+    postJSON( url, {"c": httpData}, function(data) {
+
+        // If we've compiled a script, inject it into the page
+        if( _this.options.extension == ".js" ) {
+            // Evaluate the compiled script
             (new Function(data))()
-        } catch( err ) {
-            console.log( "Error: " + err );
+        } else {
+            // Inject an iFrame into this element, and 
+            // embed the html we've received
+            _this.innerHTML = '<iframe id="myFrame"></iframe>';
+
+            var ifrm = document.getElementById('myFrame');
+            ifrm = (ifrm.contentWindow) ? ifrm.contentWindow : (ifrm.contentDocument.document) ? ifrm.contentDocument.document : ifrm.contentDocument;
+            ifrm.document.open();
+            ifrm.document.write( data );
+            ifrm.document.close();
         }
     });
 };
@@ -35,6 +62,7 @@ var CScript = document.register('c-script', {
 });
 
 function postJSON(url, data, callback) {
+
     request = $.ajax({
         url: url,
         type: "post",
@@ -46,9 +74,11 @@ function postJSON(url, data, callback) {
         callback( response );
     });
 
-    // callback handler that will be called on failure
-    //request.fail(function (jqXHR, textStatus, errorThrown){
-    //    // log the error to the console
-    //    console.error( "The following error occured: " + textStatus, errorThrown );
-    //});
+    request.fail( function() {
+        console.log( arguments ); 
+    });
+}
+
+function getHash(s){
+    return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
 }
