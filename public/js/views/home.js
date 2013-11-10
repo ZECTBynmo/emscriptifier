@@ -1,3 +1,11 @@
+var code = "#include &#60;emscripten.h&#62;\
+\nint main() {\
+\n	EM_ASM(\
+\n		alert('hello from C++!');\
+\n	);\
+\n	return 0;\
+\n}"
+
 window.HomeView = Backbone.View.extend({
 
     initialize:function () {
@@ -5,9 +13,13 @@ window.HomeView = Backbone.View.extend({
 
         var _this = this;
         setTimeout(function() {
-	        document.editor = ace.edit("editor");
-			document.editor.setTheme("ace/theme/monokai");
-			document.editor.getSession().setMode("ace/mode/c_cpp");
+	        document.editor = document.getElementById('editor');
+
+	        document.editor = CodeMirror.fromTextArea( document.editor, {
+	        	mode: "cpp",
+			    lineNumbers: true,
+			    lineWrapping: true,
+	        });
 
 			//var height = $(window).height();
 			var height = 200;
