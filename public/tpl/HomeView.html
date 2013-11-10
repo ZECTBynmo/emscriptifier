@@ -1,5 +1,5 @@
 <div class="page-header">
-  	<h1>Use C++ Directly from your web pages</h1> 
+  	<h1>Use C++ Directly in your web apps</h1> 
   	<h1><small>Leveraging <a href="https://github.com/kripken/emscripten">Emscripten</a></small></h1> 
 </div>
 
@@ -8,12 +8,12 @@
 	<div class="span8 hero-unit">
 		<div class="row-fluid">
 			<div class="span7">
-				<h2>Demo!</h2>
+				<h2>Live Demo</h2>
 				<p>Put some C++ here</p>
 			</div>
 			<div class="span4">
 				<br>
-				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-inverse btn-large"><strong>Inject into page as JavaScript</strong></a>
+				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-inverse btn-large"><strong>Compile to JS and inject into the page</strong></a>
 			</div>
 		</div>
 		
@@ -266,11 +266,11 @@ int main(int argc, char** argv) {
   return 0;
 }
 		</textarea><br>
-		Note: The server has a caching system, so the first time you submit some new source, it takes a few seconds longer. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, and try again. If it still doesn't load, there may have been some compilation errors.
+		Note: The server has a caching system. Scripts are checksummed and retrieved pre-compiled if possible. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, and try again. If it still doesn't load, there may have been some compilation errors.
 	</div>
 
 	<div class="span4">
-		<h2>Votes much appreciated</h2><br>
+		<h2>Votes much appreciated!</h2><br>
 		<iframe src="http://nodeknockout.com/iframe/zect" frameborder=0 scrolling=no allowtransparency=true width=115 height=25>
 		</iframe><br>
 
