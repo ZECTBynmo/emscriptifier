@@ -24,10 +24,7 @@
 				<br>
 				<div class="alert" id="status">No script loaded yet</div>
 			</div>
-			<div class="span4">
-				<br>
-				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-inverse btn-large"><strong>Compile to JS and inject into the page</strong></a>
-			</div>
+
 		</div>
 		
 		<textarea id="editor">
@@ -284,7 +281,15 @@ int main(int argc, char** argv) {
   return 0;
 }
 		</textarea><br>
-		Note: The server has a caching system. Scripts are checksummed and retrieved pre-compiled if possible. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, or a few minutes for a lot of code, and try again. If it still doesn't load, there may have been some compilation errors.
+
+		<div class="row-fluid">
+			<div class="span8">
+				Note: The server has a caching system. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, and try again. If it still doesn't load, there may be compilation errors.
+			</div>
+			<div class="span4">				
+				<a href="#" onclick="onInject()" href="javascript:void(0);" class="btn btn-inverse btn-large"><strong>Compile to JS and inject into the page</strong></a>
+			</div>
+		</div>
 	</div>
 
 	<div class="span4">
