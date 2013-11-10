@@ -1,15 +1,28 @@
-<div class="page-header">
-  	<h1>Use C++ Directly in your web apps</h1> 
-  	<h1><small>Leveraging <a href="https://github.com/kripken/emscripten">Emscripten</a></small></h1> 
+<div class="row-fluid">
+	<div class="span12 page-header">
+		<div class="span7">
+			<h1>Use C++ Directly in your web apps</h1> 
+	  		<h1><small>Leveraging <a href="https://github.com/kripken/emscripten">Emscripten</a></small></h1> 
+		</div>
+		<div class="span5">
+			<h2>Votes much appreciated!</h2><br>
+			<iframe src="http://nodeknockout.com/iframe/zect" frameborder=0 scrolling=no allowtransparency=true width=115 height=25>
+			</iframe><br>
+		</div>	  	
+	</div>
 </div>
 
 <div class="row-fluid">
 
 	<div class="span8 hero-unit">
 		<div class="row-fluid">
-			<div class="span7">
+			<div class="span4">
 				<h2>Live Demo</h2>
 				<p>Put some C++ here</p>
+			</div>
+			<div class="span4">
+				<br>
+				<div class="alert" id="status">No script loaded yet</div>
 			</div>
 			<div class="span4">
 				<br>
@@ -271,14 +284,10 @@ int main(int argc, char** argv) {
   return 0;
 }
 		</textarea><br>
-		Note: The server has a caching system. Scripts are checksummed and retrieved pre-compiled if possible. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, and try again. If it still doesn't load, there may have been some compilation errors.
+		Note: The server has a caching system. Scripts are checksummed and retrieved pre-compiled if possible. If the script doesn't execute right away, it may still be compiling. Wait a few seconds, or a few minutes for a lot of code, and try again. If it still doesn't load, there may have been some compilation errors.
 	</div>
 
 	<div class="span4">
-		<h2>Votes much appreciated!</h2><br>
-		<iframe src="http://nodeknockout.com/iframe/zect" frameborder=0 scrolling=no allowtransparency=true width=115 height=25>
-		</iframe><br>
-
 		<br><h2>Downloads</h2><br>
 		<a href="javascript:void(0);" onClick="window.location.href='/lib/lib.rar'" class="btn btn-primary btn-large"><strong>emscriptifier</strong></a>
 	</div>
@@ -290,11 +299,25 @@ int main(int argc, char** argv) {
 
 		function onInject() {
 			console.log( "Inject" );
+
+			$('#status').removeClass( "alert-success" ).removeClass( "alert-danger" );
+			$('#status').text( "Loading script..." );
+
 			var cScript = new CScript();
 			document.body.appendChild( cScript );
 
 			var options = {
 				extension: ".js"
+			};
+
+			cScript.onServerResponse = function( error ) {
+				if( error ) {
+					$('#status').removeClass( "alert-success" ).addClass( "alert-danger" );
+					$('#status').text( "Failed to get JS, compilation error?" );
+				} else {
+					$('#status').removeClass( "alert-danger" ).addClass( "alert-success" );
+					$('#status').text( "Successfully injected script!" );
+				}
 			};
 
 			cScript.setCode( document.editor.getValue(), options );
@@ -316,7 +339,7 @@ int main(int argc, char** argv) {
 	<div class="span6">
 		<h1 class="centered">Why would you want to do that?</h1>
 		<p>
-			JavaScript is great, but not for everything. When you're interfacing with webgl, doing audio processing, etc. it can sometimes be more natural, convenient or performant to write C/C++.
+			JavaScript is great, but sometimes C++ is better. When you're interfacing with webgl, doing audio processing, etc. it can sometimes be more natural, convenient or performant to write C/C++. The idea behind Emscriptifier is that C++ can be fully integrated into the standard HTML + CSS + JavaScript toolchain without any server-side code, as long as an interface to a translation server exists.
 			<br><br>
 			
 			A really smart guy (<a href="https://github.com/kripken">kripken</a>) built a tool called <a href="https://github.com/kripken/emscripten">Emscripten</a> that compiles C++ into LLVM bitcode, and then builds running, optimized JavaScript out of it. This application sets up an interface to load C/C++ code directly from html or JavaScript. Your C++ code gets automatically uploaded to the server, compiled into JS, and then returned for use. 
@@ -327,6 +350,7 @@ int main(int argc, char** argv) {
 	</div>
 
 	<div class="span6">
+		<h4>Example usage</h4>
 		<pre>
 &#60;head&#62;
 &#60;script src="lib/polymer/polymer.js"&#62;&#60;/script&#62;
@@ -378,8 +402,8 @@ int main(int argc, char** argv) {
 <div class="row-fluid">
 	<div class="span12">
 		<br><hr><br>
-		<h1 class="centered">How does it work?</h1>
-
+		<h1 class="centered">What's actually happening?</h1>
+		<br>
 		<div class="row-fluid">
 			<div class="span4">
 				<img src="img/diagram.png"></img>
@@ -395,6 +419,10 @@ int main(int argc, char** argv) {
 				<br><br>
 
 				On the client side, we setup custom html elements to do the code fetching. A system similar to script tags is used. The code is shipped up to the server, translated, and injected into the page before the page is finished loading.
+
+				<br><br>
+
+				Check out some of the links in the resources section for more information about how some of this stuff was put together
 			</div>
 		</div>
 	</div>
