@@ -17,7 +17,10 @@ exports.compile = function( req, res ) {
 	};
 
 	needle.post( url, sourceCode, function(err, response, body) {
-		res.json( 200, body.js );
+		if( body != undefined )
+			res.json( 200, body.js );
+		else
+			res.json( 500, err );
 	});
 
 }
