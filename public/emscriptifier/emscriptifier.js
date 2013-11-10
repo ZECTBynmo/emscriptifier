@@ -37,7 +37,10 @@ CScriptPrototype.updateContents = function() {
         extension: this.options.extension
     };
 
-    postJSON( url, {"c": httpData}, function(data) {
+    postJSON( url, {"c": httpData}, function(data, error) {
+
+        if( _this.onServerResponse != undefined )
+            _this.onServerResponse( error );
 
         // If we've compiled a script, inject it into the page
         if( _this.options.extension == ".js" ) {
@@ -71,11 +74,12 @@ function postJSON(url, data, callback) {
 
     // callback handler that will be called on success
     request.done(function (response, textStatus, jqXHR){
-        callback( response );
+        callback( response, response == null ? "Failed to load script" : undefined );
     });
 
     request.fail( function() {
         console.log( arguments ); 
+        callback( undefined, "Failed" );
     });
 }
 
