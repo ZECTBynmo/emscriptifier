@@ -288,8 +288,28 @@ int main(int argc, char** argv) {
 	</div>
 
 	<div class="span4">
-		<br><h2>Downloads</h2><br>
+		<h2>Downloads</h2><br>
 		<a href="javascript:void(0);" onClick="window.location.href='/lib/lib.rar'" class="btn btn-primary btn-large"><strong>emscriptifier</strong></a>
+
+		<br><br><br>
+
+		The download package comes with all emscripten.js, and all dependencies required to setup custom html elements. Check out some of the links in the resources page (in the header of the page) for more information.
+
+		<br><br>
+		<br><br>
+		<br><br>
+		<br><br>
+		<br><br>
+
+		<h4>Try pasting this into the demo editor</h4>
+		<pre>
+#include &#60;emscripten.h&#62;
+int main() {
+	EM_ASM(
+		alert('hello from C++!');
+	);
+	return 0;
+}</pre>
 	</div>
 
 	<script>
